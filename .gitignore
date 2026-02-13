@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+.env.production
+cache/
+artifacts/
+typechain-types/
+dist/
+web/.next/
+web/node_modules/
+*.db
+*.db-journal
+.claude/
+.omc/
+nul

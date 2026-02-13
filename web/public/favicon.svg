@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Speech bubble background -->
+  <rect x="1" y="1" width="30" height="24" rx="5" fill="#252540" stroke="#FFD700" stroke-width="2"/>
+  <!-- Bubble tail -->
+  <polygon points="8,25 14,25 10,31" fill="#252540" stroke="#FFD700" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="8" y="23" width="7" height="3" fill="#252540"/>
+  <!-- Exclamation mark -->
+  <rect x="13" y="6" width="6" height="11" rx="1" fill="#FF4444"/>
+  <rect x="13" y="19" width="6" height="4" rx="1" fill="#FF4444"/>
+</svg>

@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Room {
+  id        String   @id @default(cuid())
+  mode      String   // "story" | "chaos"
+  createdAt DateTime @default(now())
+  rounds    Round[]
+}
+
+model Round {
+  id             String       @id @default(cuid())
+  roomId         String
+  roundIndex     Int
+  rumorCardId    String
+  state          String       // "WAITING_SUBMISSIONS" | "RESOLVED"
+  preState       String       // JSON WorldState
+  postState      String?      // JSON WorldState (null until resolved)
+  report         String?      // JSON RoundReport (null until resolved)
+  env            String       // JSON ResolveEnv
+  chainTxHash    String?      // on-chain tx hash (null if chain disabled)
+  narrative      String?      // AI-generated round narrative
+  gameNarrative  String?      // AI-generated game-over narrative
+  createdAt      DateTime     @default(now())
+  resolvedAt     DateTime?
+  room           Room         @relation(fields: [roomId], references: [id])
+  submissions    Submission[]
+
+  @@unique([roomId, roundIndex])
+}
+
+model Submission {
+  id          String   @id @default(cuid())
+  roundId     String
+  playerId    String
+  agentName   String
+  action      String
+  intensity   Int
+  signals     String   // JSON string[]
+  confidence  Float
+  narrative   String
+  isValid     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  round       Round    @relation(fields: [roundId], references: [id])
+
+  @@unique([roundId, playerId])
+}
+
+model Agent {
+  id             String   @id @default(cuid())
+  playerId       String   @unique
+  agentName      String
+  walletAddress  String?  // auto-generated wallet address
+  walletKey      String?  // encrypted private key (server-side only)
+  nfaTokenId     String?  // on-chain NFA token ID
+  mintTxHash     String?  // mint transaction hash
+  totalRounds    Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
