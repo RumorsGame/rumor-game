@@ -159,6 +159,27 @@ export async function getAllAgents() {
   return prisma.agent.findMany({ orderBy: { createdAt: "asc" } });
 }
 
+export async function getAgentActionStats(playerId: string) {
+  const subs = await prisma.submission.findMany({
+    where: { playerId, isValid: true },
+    select: { action: true, intensity: true, confidence: true },
+  });
+  const actionCounts: Record<string, number> = {};
+  let totalIntensity = 0;
+  let totalConfidence = 0;
+  for (const s of subs) {
+    actionCounts[s.action] = (actionCounts[s.action] || 0) + 1;
+    totalIntensity += s.intensity;
+    totalConfidence += s.confidence;
+  }
+  return {
+    actionCounts,
+    totalSubmissions: subs.length,
+    avgIntensity: subs.length ? +(totalIntensity / subs.length).toFixed(1) : 0,
+    avgConfidence: subs.length ? +(totalConfidence / subs.length).toFixed(2) : 0,
+  };
+}
+
 async function doResolve(roundId: string) {
   const round = await prisma.round.findUnique({
     where: { id: roundId },

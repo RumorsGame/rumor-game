@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createRoomSchema, submitSchema, validateNarrativeRefs } from "../validation.js";
 import * as roomService from "../services/roomService.js";
 import * as submissionService from "../services/submissionService.js";
-import { getAgentByPlayerId, getAllAgents } from "../services/submissionService.js";
+import { getAgentByPlayerId, getAllAgents, getAgentActionStats } from "../services/submissionService.js";
 import { getCardById } from "../../rumorCards.js";
 import { getChainService } from "../services/chainService.js";
 import type { WorldState, ResolveEnv } from "../../types.js";
@@ -331,6 +331,7 @@ roomsRouter.get("/agents", async (_req, res) => {
             }
           } catch { /* ignore */ }
         }
+        const stats = await getAgentActionStats(a.playerId);
         return {
           playerId: a.playerId,
           agentName: a.agentName,
@@ -339,6 +340,9 @@ roomsRouter.get("/agents", async (_req, res) => {
           mintTxHash: a.mintTxHash,
           totalRounds: a.totalRounds,
           onChainState,
+          actionCounts: stats.actionCounts,
+          avgIntensity: stats.avgIntensity,
+          avgConfidence: stats.avgConfidence,
         };
       }),
     );

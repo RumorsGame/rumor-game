@@ -414,7 +414,10 @@ export default function Home() {
           >
             开始新游戏!
           </button>
-          <div>
+          <div className="flex items-center justify-center gap-4">
+            <Link href="/agents" className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider">
+              排行榜 →
+            </Link>
             <Link href="/history" className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider">
               历史记录 →
             </Link>
@@ -445,6 +448,12 @@ export default function Home() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/agents"
+            className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider"
+          >
+            排行榜
+          </Link>
           <Link
             href="/history"
             className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider"
