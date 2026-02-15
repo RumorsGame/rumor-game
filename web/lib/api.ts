@@ -50,10 +50,11 @@ export async function getChainVerification(roomId: string, roundIndex: number) {
   return res.json();
 }
 
-export async function startNewGame() {
+export async function startNewGame(mode: "story" | "chaos" = "story") {
   const res = await fetch(`${API_BASE}/api/rooms/new-game`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ mode }),
   });
   return res.json();
 }

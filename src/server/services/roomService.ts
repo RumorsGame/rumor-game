@@ -41,8 +41,8 @@ export async function getOrCreateDefaultRoom() {
 }
 
 /** Create a fresh room for a new game */
-export async function createNewGame() {
-  const room = await prisma.room.create({ data: { mode: "story" } });
+export async function createNewGame(mode: "story" | "chaos" = "story") {
+  const room = await prisma.room.create({ data: { mode } });
   return { room, roomId: room.id };
 }
 
@@ -69,8 +69,11 @@ export async function startOrGetCurrentRound(roomId: string) {
   // Determine next round index
   const nextIndex = lastRound ? lastRound.roundIndex + 1 : 0;
 
-  // Story mode: max 6 rounds
+  // Story mode: max 6 rounds; Chaos mode: max 10 rounds
   if (room.mode === "story" && nextIndex >= 6) {
+    return null; // game over
+  }
+  if (room.mode === "chaos" && nextIndex >= 10) {
     return null; // game over
   }
 

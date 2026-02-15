@@ -373,8 +373,8 @@ export default function Home() {
   /* ===== GAME OVER ===== */
   if (!data || data.gameOver) {
     const isCollapse = data?.message === "系统性崩溃";
-    const handleNewGame = async () => {
-      await startNewGame();
+    const handleNewGame = async (mode: "story" | "chaos" = "story") => {
+      await startNewGame(mode);
       setLoading(true);
       refresh();
     };
@@ -408,13 +408,24 @@ export default function Home() {
         )}
 
         <div className="text-center space-y-4">
-          <button
-            onClick={handleNewGame}
-            className="comic-btn bg-[var(--comic-yellow)] text-black px-8 py-3 text-lg"
-          >
-            开始新游戏!
-          </button>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <button
+              onClick={() => handleNewGame("story")}
+              className="comic-btn bg-[var(--comic-yellow)] text-black px-6 py-3 text-base"
+            >
+              故事模式
+            </button>
+            <button
+              onClick={() => handleNewGame("chaos")}
+              className="comic-btn bg-[var(--comic-purple)] text-white px-6 py-3 text-base"
+            >
+              混沌模式
+            </button>
+          </div>
           <div className="flex items-center justify-center gap-4">
+            <Link href="/charts" className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider">
+              图表 →
+            </Link>
             <Link href="/agents" className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider">
               排行榜 →
             </Link>
@@ -443,11 +454,19 @@ export default function Home() {
             如果谣言是真的…
           </h1>
           <p className="text-sm text-[var(--muted)] mt-1 font-mono">
-            回合 {data.roundIndex + 1} / 6
-            <span className="ml-2 text-[10px] text-[var(--comic-yellow)]">故事模式</span>
+            回合 {data.roundIndex + 1} / {data.mode === "chaos" ? 10 : 6}
+            <span className={`ml-2 text-[10px] ${data.mode === "chaos" ? "text-[var(--comic-purple)]" : "text-[var(--comic-yellow)]"}`}>
+              {data.mode === "chaos" ? "混沌模式" : "故事模式"}
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/charts"
+            className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider"
+          >
+            图表
+          </Link>
           <Link
             href="/agents"
             className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider"

@@ -76,11 +76,12 @@ roomsRouter.get("/default", async (_req, res) => {
 });
 
 // POST /api/rooms/new-game — start a fresh game
-roomsRouter.post("/new-game", async (_req, res) => {
+roomsRouter.post("/new-game", async (req, res) => {
   try {
-    const { room, roomId } = await roomService.createNewGame();
+    const mode = req.body?.mode === "chaos" ? "chaos" : "story";
+    const { room, roomId } = await roomService.createNewGame(mode);
     const round = await roomService.startOrGetCurrentRound(roomId);
-    res.json({ roomId, roundIndex: round?.roundIndex ?? 0, message: "新游戏已创建" });
+    res.json({ roomId, mode, roundIndex: round?.roundIndex ?? 0, message: "新游戏已创建" });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
