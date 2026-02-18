@@ -78,7 +78,7 @@ export function getCardById(id: string): RumorCard {
   return card;
 }
 
-export function drawCard(mode: "story" | "chaos", roundIndex: number, seed?: number): RumorCard {
+export function drawCard(mode: "story" | "chaos" | "survival", roundIndex: number, seed?: number): RumorCard {
   if (mode === "story") {
     if (roundIndex < 0 || roundIndex >= STORY_ORDER.length) {
       throw new Error(`Story mode only has ${STORY_ORDER.length} rounds`);

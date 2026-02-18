@@ -78,7 +78,8 @@ roomsRouter.get("/default", async (_req, res) => {
 // POST /api/rooms/new-game — start a fresh game
 roomsRouter.post("/new-game", async (req, res) => {
   try {
-    const mode = req.body?.mode === "chaos" ? "chaos" : "story";
+    const m = req.body?.mode;
+    const mode = (m === "chaos" || m === "survival") ? m : "story";
     const { room, roomId } = await roomService.createNewGame(mode);
     const round = await roomService.startOrGetCurrentRound(roomId);
     res.json({ roomId, mode, roundIndex: round?.roundIndex ?? 0, message: "新游戏已创建" });

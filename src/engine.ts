@@ -179,6 +179,41 @@ export function resolveRound(
     });
   }
 
+  // --- (5c) Black Swan Events (15% chance, skip round 0) ---
+  if (roundIndex > 0) {
+    const bsSeed = sha256(envIn.nextShockBonus + ":" + roundIndex + ":" + rumorCard.id);
+    const bsRoll = parseInt(bsSeed.slice(0, 8), 16) % 100;
+    if (bsRoll < 15) {
+      const bsType = parseInt(bsSeed.slice(8, 10), 16) % 6;
+      switch (bsType) {
+        case 0: // 全场恐慌
+          s.Panic += 20; s.Trust -= 15;
+          events.push({ event: "black_swan", detail: "🦢 黑天鹅：全场恐慌 — 恐慌+20 信任-15" });
+          break;
+        case 1: // 市场熔断
+          s.Price -= 20; s.Liquidity -= 15;
+          events.push({ event: "black_swan", detail: "🦢 黑天鹅：市场熔断 — 价格-20 流动性-15" });
+          break;
+        case 2: // 信心重置
+          s.Trust = 30 + (parseInt(bsSeed.slice(10, 12), 16) % 40);
+          events.push({ event: "black_swan", detail: `🦢 黑天鹅：信心重置 — 信任重置为${s.Trust.toFixed(0)}` });
+          break;
+        case 3: // 谣言风暴
+          env.nextShockBonus += 8;
+          events.push({ event: "black_swan", detail: "🦢 黑天鹅：谣言风暴 — 下轮冲击+8" });
+          break;
+        case 4: // 监管突袭
+          s.Load += 30; s.Panic += 15;
+          events.push({ event: "black_swan", detail: "🦢 黑天鹅：监管突袭 — 负载+30 恐慌+15" });
+          break;
+        case 5: // 白骑士救场
+          s.Trust += 20; s.Panic -= 15;
+          events.push({ event: "black_swan", detail: "🦢 黑天鹅：白骑士救场 — 信任+20 恐慌-15" });
+          break;
+      }
+    }
+  }
+
   // --- (6) Clamp ---
   const postState = clampState(s);
 

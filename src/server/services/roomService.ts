@@ -3,7 +3,7 @@ import { drawCard } from "../../rumorCards.js";
 import { DEFAULT_WORLD } from "../../types.js";
 import type { WorldState, ResolveEnv } from "../../types.js";
 
-export async function createRoom(mode: "story" | "chaos") {
+export async function createRoom(mode: "story" | "chaos" | "survival") {
   const room = await prisma.room.create({ data: { mode } });
   return room;
 }
@@ -17,10 +17,14 @@ export async function getOrCreateDefaultRoom() {
 
   if (existing) {
     const lastRound = existing.rounds[0];
-    const normalEnd = existing.mode === "story"
+    const normalEnd = (existing.mode === "story"
       && lastRound
       && lastRound.state === "RESOLVED"
-      && lastRound.roundIndex >= 5;
+      && lastRound.roundIndex >= 5)
+      || (existing.mode === "chaos"
+      && lastRound
+      && lastRound.state === "RESOLVED"
+      && lastRound.roundIndex >= 9);
 
     // Check for early collapse
     let earlyCollapse = false;
@@ -41,7 +45,7 @@ export async function getOrCreateDefaultRoom() {
 }
 
 /** Create a fresh room for a new game */
-export async function createNewGame(mode: "story" | "chaos" = "story") {
+export async function createNewGame(mode: "story" | "chaos" | "survival" = "story") {
   const room = await prisma.room.create({ data: { mode } });
   return { room, roomId: room.id };
 }
@@ -69,7 +73,7 @@ export async function startOrGetCurrentRound(roomId: string) {
   // Determine next round index
   const nextIndex = lastRound ? lastRound.roundIndex + 1 : 0;
 
-  // Story mode: max 6 rounds; Chaos mode: max 10 rounds
+  // Story mode: max 6 rounds; Chaos mode: max 10 rounds; Survival: unlimited
   if (room.mode === "story" && nextIndex >= 6) {
     return null; // game over
   }
@@ -88,7 +92,7 @@ export async function startOrGetCurrentRound(roomId: string) {
     : { ...DEFAULT_WORLD };
 
   // Draw card
-  const card = drawCard(room.mode as "story" | "chaos", nextIndex);
+  const card = drawCard(room.mode as "story" | "chaos" | "survival", nextIndex);
 
   const round = await prisma.round.create({
     data: {

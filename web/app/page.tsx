@@ -68,7 +68,7 @@ const EVENT_LABELS: Record<string, string> = {
   rumor_viral: "谣言病毒传播", collective_confidence: "集体信心",
   calm_restored: "恐慌平息", market_stable: "市场稳定",
   self_fulfilling_loop: "自证循环", loss_spiral: "损失螺旋",
-  systemic_collapse: "系统性崩溃",
+  systemic_collapse: "系统性崩溃", black_swan: "黑天鹅事件",
 };
 
 const POSITIVE_EVENTS = new Set(["collective_confidence", "calm_restored", "market_stable"]);
@@ -243,8 +243,8 @@ function HashPanel({ hashes, chainTxHash }: { hashes: { roundHash: string }; cha
   };
 
   const items = [
+    ...(chainTxHash ? [{ label: "chainTxHash", value: chainTxHash, link: `https://testnet.bscscan.com/tx/${chainTxHash}` }] : []),
     { label: "roundHash", value: hashes.roundHash },
-    ...(chainTxHash ? [{ label: "chainTxHash", value: chainTxHash }] : []),
   ];
 
   return (
@@ -258,10 +258,14 @@ function HashPanel({ hashes, chainTxHash }: { hashes: { roundHash: string }; cha
       </button>
       {open && (
         <div className="mt-2 space-y-1 bg-black/30 border-2 border-black p-3">
-          {items.map(({ label, value }) => (
+          {items.map(({ label, value, link }: any) => (
             <div key={label} className="flex items-center gap-2 text-[10px] font-mono text-[var(--muted)]">
               <span className="shrink-0 text-[var(--comic-yellow)]">{label}:</span>
-              <span className="truncate flex-1">{value}</span>
+              {link ? (
+                <a href={link} target="_blank" rel="noopener noreferrer" className="truncate flex-1 text-[var(--comic-green)] hover:underline">{value}</a>
+              ) : (
+                <span className="truncate flex-1">{value}</span>
+              )}
               <button
                 onClick={() => copy(label, value)}
                 className="shrink-0 px-2 py-0.5 bg-black border border-[var(--muted)]/30 hover:border-[var(--comic-yellow)] text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors cursor-pointer font-bold"
@@ -373,7 +377,7 @@ export default function Home() {
   /* ===== GAME OVER ===== */
   if (!data || data.gameOver) {
     const isCollapse = data?.message === "系统性崩溃";
-    const handleNewGame = async (mode: "story" | "chaos" = "story") => {
+    const handleNewGame = async (mode: "story" | "chaos" | "survival" = "story") => {
       await startNewGame(mode);
       setLoading(true);
       refresh();
@@ -421,6 +425,12 @@ export default function Home() {
             >
               混沌模式
             </button>
+            <button
+              onClick={() => handleNewGame("survival")}
+              className="comic-btn bg-[var(--comic-red)] text-white px-6 py-3 text-base"
+            >
+              生存模式
+            </button>
           </div>
           <div className="flex items-center justify-center gap-4">
             <Link href="/charts" className="text-sm text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors font-bold uppercase tracking-wider">
@@ -454,9 +464,9 @@ export default function Home() {
             如果谣言是真的…
           </h1>
           <p className="text-sm text-[var(--muted)] mt-1 font-mono">
-            回合 {data.roundIndex + 1} / {data.mode === "chaos" ? 10 : 6}
-            <span className={`ml-2 text-[10px] ${data.mode === "chaos" ? "text-[var(--comic-purple)]" : "text-[var(--comic-yellow)]"}`}>
-              {data.mode === "chaos" ? "混沌模式" : "故事模式"}
+            回合 {data.roundIndex + 1}{data.mode === "survival" ? "" : ` / ${data.mode === "chaos" ? 10 : 6}`}
+            <span className={`ml-2 text-[10px] ${data.mode === "chaos" ? "text-[var(--comic-purple)]" : data.mode === "survival" ? "text-[var(--comic-red)]" : "text-[var(--comic-yellow)]"}`}>
+              {data.mode === "chaos" ? "混沌模式" : data.mode === "survival" ? "生存模式" : "故事模式"}
             </span>
           </p>
         </div>
@@ -590,12 +600,13 @@ export default function Home() {
               <div className="space-y-2">
                 {report.triggeredEvents.map((ev, i) => {
                   const isPositive = POSITIVE_EVENTS.has(ev.event);
+                  const isBlackSwan = ev.event === "black_swan";
                   return (
-                    <div key={i} className="text-xs flex items-start gap-2">
-                      <span className={`comic-badge text-white text-[10px] shrink-0 ${isPositive ? "bg-emerald-600" : "bg-[var(--comic-red)]"}`}>
+                    <div key={i} className={`text-xs flex items-start gap-2 ${isBlackSwan ? "p-2 border border-amber-500/50 bg-amber-500/10" : ""}`}>
+                      <span className={`comic-badge text-white text-[10px] shrink-0 ${isBlackSwan ? "bg-amber-600" : isPositive ? "bg-emerald-600" : "bg-[var(--comic-red)]"}`}>
                         {EVENT_LABELS[ev.event] || ev.event}
                       </span>
-                      <span className="text-[var(--muted)]">{ev.detail}</span>
+                      <span className={isBlackSwan ? "text-amber-300 font-bold" : "text-[var(--muted)]"}>{ev.detail}</span>
                     </div>
                   );
                 })}
