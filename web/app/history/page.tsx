@@ -57,6 +57,7 @@ const EVENT_LABELS: Record<string, string> = {
   calm_restored: "恐慌平息", market_stable: "市场稳定",
   self_fulfilling_loop: "自证循环", loss_spiral: "损失螺旋",
   systemic_collapse: "系统性崩溃",
+  black_swan: "黑天鹅事件",
 };
 
 const POSITIVE_EVENTS = new Set(["collective_confidence", "calm_restored", "market_stable"]);
@@ -82,7 +83,7 @@ const SIGNAL_LABELS: Record<string, string> = {
   auto: "自动", skeptical: "怀疑",
 };
 
-function HashBlock({ label, hash }: { label: string; hash: string }) {
+function HashBlock({ label, hash, link }: { label: string; hash: string; link?: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(hash);
@@ -92,7 +93,11 @@ function HashBlock({ label, hash }: { label: string; hash: string }) {
   return (
     <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--muted)]">
       <span className="shrink-0 text-[var(--comic-yellow)]">{label}:</span>
-      <span className="truncate flex-1">{hash}</span>
+      {link ? (
+        <a href={link} target="_blank" rel="noopener noreferrer" className="truncate flex-1 text-[var(--comic-green)] hover:underline">{hash}</a>
+      ) : (
+        <span className="truncate flex-1">{hash}</span>
+      )}
       <button
         onClick={copy}
         className="shrink-0 px-2 py-0.5 bg-black border border-[var(--muted)]/30 hover:border-[var(--comic-yellow)] text-[var(--muted)] hover:text-[var(--comic-yellow)] transition-colors cursor-pointer font-bold"
@@ -208,12 +213,8 @@ function RoundCard({ round, defaultOpen }: { round: RoundData; defaultOpen: bool
             </button>
             {hashOpen && (
               <div className="mt-2 space-y-1 bg-black/30 border-2 border-black p-3">
+                {round.chainTxHash && <HashBlock label="chainTxHash" hash={round.chainTxHash} link={`https://testnet.bscscan.com/tx/${round.chainTxHash}`} />}
                 <HashBlock label="roundHash" hash={report.hashes.roundHash} />
-                <HashBlock label="preStateHash" hash={report.hashes.preStateHash} />
-                <HashBlock label="postStateHash" hash={report.hashes.postStateHash} />
-                <HashBlock label="actionsHash" hash={report.hashes.actionsHash} />
-                <HashBlock label="rumorCardHash" hash={report.hashes.rumorCardHash} />
-                {round.chainTxHash && <HashBlock label="chainTxHash" hash={round.chainTxHash} />}
               </div>
             )}
           </div>
