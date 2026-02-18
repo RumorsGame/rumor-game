@@ -32,6 +32,13 @@ export class ChainService {
   private rumorSim: Contract;
   private agentNFA: Contract;
   private enabled: boolean;
+  private txQueue: Promise<any> = Promise.resolve();
+
+  private enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    const p = this.txQueue.then(fn, fn);
+    this.txQueue = p.catch(() => {});
+    return p;
+  }
 
   constructor(config?: ChainConfig) {
     if (!config || !config.privateKey || !config.rumorSimAddress) {
@@ -75,14 +82,16 @@ export class ChainService {
     narrativeHash: string,
   ) {
     if (!this.enabled) return null;
-    const tx = await this.rumorSim.submitActionHash(
-      this.roomIdToBytes32(roomId),
-      roundIndex,
-      playerAddress,
-      this.hexToBytes32(actionHash),
-      this.hexToBytes32(narrativeHash),
-    );
-    return tx.wait();
+    return this.enqueue(async () => {
+      const tx = await this.rumorSim.submitActionHash(
+        this.roomIdToBytes32(roomId),
+        roundIndex,
+        playerAddress,
+        this.hexToBytes32(actionHash),
+        this.hexToBytes32(narrativeHash),
+      );
+      return tx.wait();
+    });
   }
 
   async resolveRoundOnChain(
@@ -97,20 +106,22 @@ export class ChainService {
     },
   ) {
     if (!this.enabled) return null;
-    const tx = await this.rumorSim.resolveRound(
-      this.roomIdToBytes32(roomId),
-      roundIndex,
-      this.hexToBytes32(hashes.preStateHash),
-      this.hexToBytes32(hashes.postStateHash),
-      this.hexToBytes32(hashes.actionsHash),
-      this.hexToBytes32(hashes.rumorCardHash),
-      this.hexToBytes32(hashes.roundHash),
-    );
-    const receipt = await tx.wait();
-    return {
-      txHash: receipt.hash,
-      blockNumber: receipt.blockNumber,
-    };
+    return this.enqueue(async () => {
+      const tx = await this.rumorSim.resolveRound(
+        this.roomIdToBytes32(roomId),
+        roundIndex,
+        this.hexToBytes32(hashes.preStateHash),
+        this.hexToBytes32(hashes.postStateHash),
+        this.hexToBytes32(hashes.actionsHash),
+        this.hexToBytes32(hashes.rumorCardHash),
+        this.hexToBytes32(hashes.roundHash),
+      );
+      const receipt = await tx.wait();
+      return {
+        txHash: receipt.hash,
+        blockNumber: receipt.blockNumber,
+      };
+    });
   }
 
   async verifyRoundHash(roomId: string, roundIndex: number, expectedHash: string): Promise<boolean> {
@@ -138,23 +149,24 @@ export class ChainService {
 
   async mintAgent(persona: string, experience: string, version: string = "1.0") {
     if (!this.enabled) return null;
-    const meta = {
-      persona,
-      experience,
-      version,
-      vaultURI: "",
-      vaultHash: ethers.zeroPadValue("0x", 32),
-    };
-    const tx = await this.agentNFA.mint(meta);
-    const receipt = await tx.wait();
-    // Parse AgentMinted event to get tokenId
-    const event = receipt.logs.find(
-      (log: any) => log.fragment?.name === "AgentMinted",
-    );
-    return {
-      txHash: receipt.hash,
-      tokenId: event?.args?.[0]?.toString() || null,
-    };
+    return this.enqueue(async () => {
+      const meta = {
+        persona,
+        experience,
+        version,
+        vaultURI: "",
+        vaultHash: ethers.zeroPadValue("0x", 32),
+      };
+      const tx = await this.agentNFA.mint(meta);
+      const receipt = await tx.wait();
+      const event = receipt.logs.find(
+        (log: any) => log.fragment?.name === "AgentMinted",
+      );
+      return {
+        txHash: receipt.hash,
+        tokenId: event?.args?.[0]?.toString() || null,
+      };
+    });
   }
 
   async getAgentMetadata(tokenId: number) {
@@ -169,20 +181,24 @@ export class ChainService {
 
   async recordAction(tokenId: number, roundIndex: number, actionHash: string) {
     if (!this.enabled) return null;
-    const tx = await this.agentNFA.recordAction(
-      tokenId,
-      roundIndex,
-      this.hexToBytes32(actionHash),
-    );
-    const receipt = await tx.wait();
-    return { txHash: receipt.hash };
+    return this.enqueue(async () => {
+      const tx = await this.agentNFA.recordAction(
+        tokenId,
+        roundIndex,
+        this.hexToBytes32(actionHash),
+      );
+      const receipt = await tx.wait();
+      return { txHash: receipt.hash };
+    });
   }
 
   async setRunner(tokenId: number, runnerAddress: string) {
     if (!this.enabled) return null;
-    const tx = await this.agentNFA.setRunner(tokenId, runnerAddress);
-    const receipt = await tx.wait();
-    return { txHash: receipt.hash };
+    return this.enqueue(async () => {
+      const tx = await this.agentNFA.setRunner(tokenId, runnerAddress);
+      const receipt = await tx.wait();
+      return { txHash: receipt.hash };
+    });
   }
 }
 
