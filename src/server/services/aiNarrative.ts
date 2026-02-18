@@ -43,6 +43,7 @@ export async function generateRoundNarrative(
   card: RumorCard,
   submissions: Submission[],
   report: RoundReport,
+  previousNarrative?: string,
 ): Promise<string> {
   if (!isEnabled()) return "";
 
@@ -54,14 +55,18 @@ export async function generateRoundNarrative(
 - 描述谣言如何传播、人们如何反应、系统发生了什么变化
 - 如果触发了阈值事件，要戏剧化地描述
 - 语气像一个冷静的观察者在记录一场正在发生的危机
-- 不要用"本回合"这种游戏术语，写得像真实事件报道`;
+- 不要用"本回合"这种游戏术语，写得像真实事件报道
+- 重要：如果提供了前情摘要，你必须承接前文的叙事线索，保持人物、事件、情绪的连贯性，像连载小说的下一章`;
 
   const events = report.triggeredEvents.map(e => `${e.event}: ${e.detail}`).join("\n");
   const actions = submissions.map(s =>
     `${s.agent_name}选择了${s.action}(强度${s.intensity})：${s.narrative.slice(0, 80)}`
   ).join("\n");
 
+  const prevContext = previousNarrative ? `\n前情摘要（上一轮叙事，请承接）：\n${previousNarrative}\n` : "";
+
   const user = `回合 ${roundIndex + 1}
+${prevContext}
 谣言卡：${card.title} —— "${card.rumor_text}" (冲击=${card.shock}, 可信度=${card.credibility})
 
 结算前状态：恐慌=${report.preState.Panic}, 信任=${report.preState.Trust}, 流动性=${report.preState.Liquidity}, 负载=${report.preState.Load}, 谣言=${report.preState.Rumor}, 价格=${report.preState.Price}, 损失=${report.preState.Loss}

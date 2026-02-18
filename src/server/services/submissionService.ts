@@ -254,7 +254,10 @@ async function doResolve(roundId: string) {
   }
 
   // AI narrative generation (non-blocking — don't fail the resolve)
-  generateRoundNarrative(round.roundIndex, card, subs, result.report)
+  const prevRound = round.roundIndex > 0
+    ? await prisma.round.findFirst({ where: { roomId: round.roomId, roundIndex: round.roundIndex - 1 }, select: { narrative: true } })
+    : null;
+  generateRoundNarrative(round.roundIndex, card, subs, result.report, prevRound?.narrative || undefined)
     .then(async (narrative) => {
       if (narrative) {
         await prisma.round.update({
